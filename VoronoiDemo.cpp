@@ -377,34 +377,6 @@ std::list<Corner> fetchAdjacentCorners(Point corner, std::map<Point, Corner*> ma
 	;
 }
 
-// Given a Voronoi site, return a list of Corner objects composed
-CornerListObj fetchCorners (Center* center) {
-	CornerListObj cornerList;
-	Vertex_handle handle = triang.nearest_vertex(center->point);
-	Face_circulator f_circ = triang.incident_faces(handle),
-	done(f_circ);
-	
-	do
-	{
-		// Given an incident face to a given vertex, fetch the dual of this face,
-		// which corresponds to the center of the circle circumscribed to face f,
-		// AKA: the corresponding corner of a voronoi face
-		Point location = triang.dual(f_circ);
-		Corner corner;
-		corner.index = cornerList.size();
-		corner.point = location;
-		// In openGL, point (0.0, 0.0) is located at the top left corner of the window
-		// Cgal continues generating Voronoi points outside of window space
-		// Check to see if any of the points lie outside of the window coordinates
-		corner.isBorder = (corner.point[0] <= 0 or corner.point[0] >= SIZE or corner.point[1] <= 0 or corner.point[1] >= SIZE);
-		
-		cornerList.push_back(corner);
-		
-	} while(++f_circ != done);
-	
-	return cornerList;
-}
-
 
 // Given a Voronoi site, return a Center object with the following initialized:
 // location, isWater, ocean, isBorder, and corners
