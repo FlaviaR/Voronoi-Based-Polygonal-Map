@@ -557,17 +557,27 @@ void generateRandPoints() {
 	triangRand = triangle;
 }
 
-// Deletes all pointers from centerList
+// Deletes all pointers from centerList and cornerList
 void resetPointerLists(void) {
 	for ( CenterList::iterator center_iter = centerList.begin();
-		 center_iter != centerList.end(); ++center_iter)
+		 center_iter != centerList.end(); ++center_iter) {
 		if (*center_iter != NULL) {
 			
 			delete *center_iter;
 		}
+	}
+	
+	for ( CornerList::iterator corner_iter = cornerList.begin();
+		 corner_iter != cornerList.end(); ++corner_iter) {
+		if (*corner_iter != NULL) {
+			
+			delete *corner_iter;
+		}
+}
 	// The list must also be cleared to get rid of NULL pointing pointers
 	// Failing to do so will lead to Segmentation Faults
 	centerList.clear();
+	cornerList.clear();
 }
 
 // --------------------------------------------------------------------------------------
