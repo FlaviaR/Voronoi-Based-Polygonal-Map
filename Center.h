@@ -5,8 +5,7 @@
 
 typedef CGAL::Cartesian<double> K;  ///< Kernel
 typedef CGAL::Point_2<K>  Point;  ///< Point in 2D
-typedef std::list<Point>  PointList;
-typedef std::list<Corner> CornerList;
+typedef std::list<Corner> CornerListObj;
 
 // The Center object is responsible to keep track of the relationships between Voronoi faces
 class Center {
@@ -28,7 +27,7 @@ class Center {
 
 	
 		// List of the corners of this voronoi face
-		CornerList corners;
+		std::list<Corner> corners;
 		// List of the neighbors of this voronoi face
 		std::list<Center> neighbors;
 		// List of the edges of this voronoi face
@@ -45,8 +44,8 @@ class Center {
 		out << "\n ocean: "		<< center.ocean;
 		out << "\n isBorder: "	<< center.isBorder;
 		
-		CornerList corners = center.corners;
-		CornerList::iterator corner_iter = corners.begin();
+		CornerListObj corners = center.corners;
+		CornerListObj::iterator corner_iter = corners.begin();
 		
 		while (corner_iter != corners.end()) {
 			Corner corner = *corner_iter++;

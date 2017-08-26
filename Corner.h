@@ -24,6 +24,11 @@ class Corner {
 	
 		float elevation; // between 0.0 and 1.0
 	
+		// the list of corners adjacent to this corner
+		std::list<Corner> adjacent;
+
+	
+	
 	// Print the data from center
 	friend std::ostream& operator <<(std::ostream& out, const Corner& corner ) {
 		out << "\n \t Corner " << corner.index;
