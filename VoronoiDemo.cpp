@@ -11,6 +11,7 @@
  Delaunay triangulation is the dual of Voronoi diagrams, meaning that for every triangulation there
  exists one and only one corresponding Voronoi tesselation. And vice versa.
  The exception being the degenerative cases, eg. when the Voronoi diagrams result in a square grid.
+ 
  @author Flavia Cavalcanti
  @since 17/07/2017
  @see http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
@@ -115,7 +116,7 @@ bool displayBiome = false;
 // Whether to display a radially generated map
 bool displayRadial = false;
 // Whether to display the Delaunay triangulation of the currently displayed Voronoi polygons
-bool displayDelaunay = false;
+bool displayDelaunay = true;
 // Whether to display the Voronoi polygons
 bool displayVoronoi = true;
 
@@ -287,8 +288,12 @@ void assignCornerElevations (void) {
 		} else {
 			// elevations are supposed to be between 0.0 and 1.0 -
 			// just add a large number here as a flag
-			corner->elevation = 10.0;
+			//corner->elevation = 10.0;
 			
+			std::random_device rd;  //Will be used to obtain a seed for the random number engine
+			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+			std::uniform_real_distribution<> dist(0, 10);
+			corner -> elevation = dist(gen)/10;
 		}
 		
 	}
@@ -346,9 +351,14 @@ CornerList initCorners (Point site) {
 	return corners;
 }
 
+std::list<Corner> fetchAdjacentCorners(Point corner, std::map<Point, Corner*> map) {
+	;
+}
+
+
 // Initialize Center objects based off of the point list
 	TupleMaps initCornersAndMap (void) {
-//
+
 	std::map <Point, CornerList> cornerMapV; // key: voronoi site, value: corresponding corners
 	std::map <Point, Corner*> cornerMap;    // key: corner site, value: corresponding corner pointer
 	boost::tuple<std::map <Point, CornerList>, std::map <Point, Corner*> > retValues;
@@ -372,11 +382,6 @@ CornerList initCorners (Point site) {
 	
 	return boost::make_tuple(cornerMapV, cornerMap);
 }
-
-std::list<Corner> fetchAdjacentCorners(Point corner, std::map<Point, Corner*> map) {
-	;
-}
-
 
 // Given a Voronoi site, return a Center object with the following initialized:
 // location, isWater, ocean, isBorder, and corners
@@ -402,6 +407,7 @@ Center* initCenters (Point site, std::map <Point, CornerList> cornerMapV) {
 	}
 	
 	setOceanBorders(center);
+	assignFaceElevations (center);
 	
 	return center;
 }
@@ -464,6 +470,10 @@ void buildRelationshipLists () {
 	TupleMaps cornerMaps = initCornersAndMap();
 	std::map <Point, CornerList> cornerMapV = boost::get<0>(cornerMaps);
 	std::map <Point, Corner*> cornerMap  = boost::get<1>(cornerMaps);
+	
+	assignCornerElevations();
+	
+	
 	std::map <Point, Center*> centerMap  = initCentersAndMap(cornerMapV);
 //	std::map <Point, Center*> centerMap  = initCentersAndMap();
 
@@ -573,7 +583,7 @@ void resetPointerLists(void) {
 			
 			delete *corner_iter;
 		}
-}
+	}
 	// The list must also be cleared to get rid of NULL pointing pointers
 	// Failing to do so will lead to Segmentation Faults
 	centerList.clear();
@@ -591,7 +601,7 @@ void drawBiomes(void) {
 		
 		if (c->isWater and !c->isBorder) glColor3f (0.0, 0.23, 0.45);
 		if (c->isBorder) glColor3f (1.0, 0.23, 0.45);
-		if (!c->isBorder and !c->isWater) glColor3f (0.41, 0.58, 0.35);
+		if (!c->isBorder and !c->isWater) glColor3f (0.0, c->elevation, 0.0);
 		
 		CornerListObj corners = c->corners;
 		
@@ -674,15 +684,15 @@ void mouse (int button, int state, int x, int y)
 	
 	// Add new points on left mouse button click
 	// Will only be performed if addPointsWithClick is set
-	if (button == GLUT_LEFT_BUTTON and addPointsWithClick) {
-		Point p ((double) x, (double) y);
-		points.push_back (p);
-		
-		triang.push_back (p);
-		glutPostRedisplay ();
-	}
+//	if (button == GLUT_LEFT_BUTTON and addPointsWithClick) {
+//		Point p ((double) x, (double) y);
+//		points.push_back (p);
+//		
+//		triang.push_back (p);
+//		glutPostRedisplay ();
+//	}
 	
-	if (button == GLUT_MIDDLE_BUTTON) {
+	if (button == GLUT_LEFT_BUTTON) {
 		displayDelaunay = not displayDelaunay;
 	}
 	
