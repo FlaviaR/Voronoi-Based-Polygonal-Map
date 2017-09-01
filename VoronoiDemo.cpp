@@ -909,6 +909,7 @@ void keyboard (unsigned char key, int x, int y) {
 			"2 - Voronoi diagram with applied LLoyd relaxation \n "
 			"3 - Randomely generated map \n "
 			"4 - Radial map generarion \n "
+			"e - display map elevations \n"
 			"r - generate a new diagram \n "
 			"Middle Mouse Button - display Delaunay triangulation \n "
 			"Left Mouse Button - display Voronoi diagram \n";

@@ -25,13 +25,15 @@ This project uses CGAL and OpenGL.
 * '1' - Initial Voronoi diagram
 * '2' - Voronoi diagram with applied Lloyd Relaxation
 * '3' - Radially generated map
+* 'e' - display map elevations'
 * 'r' - randomize - generate a new map
 * 'MOUSE LEFT BUTTON' - display Delaunay triangulation
 * 'MOUSE RIGHT BUTTON' - display Voronoi diagram
 
 
 ## TO DO:
-* Finish developing graph structure
+* Finish developing graph structure - figure out how to get incident vertices for the voronoi corners
+* Generate a uniform elevation standard, where the center of the map has higher elevations than the borders
 * Display lakes
 * Display rivers
 * Add elevations
