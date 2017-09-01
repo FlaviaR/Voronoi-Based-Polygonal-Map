@@ -34,6 +34,7 @@ This project uses CGAL and OpenGL.
 ## TO DO:
 * Finish developing graph structure - figure out how to get incident vertices for the voronoi corners
 * Generate a uniform elevation standard, where the center of the map has higher elevations than the borders
+* Make the colors be less ugly
 * Display lakes
 * Display rivers
 * Add elevations
