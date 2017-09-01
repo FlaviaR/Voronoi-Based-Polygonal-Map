@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <time.h>       /* time */
 #include <string>
+#include <array>
 #include <queue>        // std::queue
 #include <tuple>
 #include <map>			// std::map
@@ -95,6 +96,10 @@ Voronoi voronoiRand;
 CenterList centerList;
 CornerList cornerList;
 
+// struct to hold color values
+struct RGB {
+	double rgb[3];
+};
 
 // Be sure to use a square map - to make my life easier ( .^. )
 int SIZE = 500;
@@ -106,13 +111,14 @@ int height = SIZE;
 int numOfPoints = 300;
 // Number of times to run lloyd's relaxation
 int numOfLloydIterations = 2;
-// Whether to add new points when clicking the left mouse button - probably will not use this
-bool addPointsWithClick = false;
+std::map<string, RGB> biomeValues;
 
 // Whether to display the Voronoi polygons generated via randomely generated points
-bool displayRandom = true;
+bool displayRandomVoronoi = true;
 // Whether to display the generated map biomes
 bool displayBiome = false;
+// Whether to display the generated elevation based map
+bool displayElevations = false;
 // Whether to display a radially generated map
 bool displayRadial = false;
 // Whether to display the Delaunay triangulation of the currently displayed Voronoi polygons
@@ -121,7 +127,7 @@ bool displayDelaunay = true;
 bool displayVoronoi = true;
 
 // Whether to run testing methods
-bool debug = true;
+bool debug = false;
 
 // --------------------------------------------------------------------------------------
 
@@ -261,16 +267,52 @@ bool isInside(Point p) {
 	else return generateRandomMap(p);
 }
 
-void assignFaceElevations(Center* center) {
+// Set the moisture and elevation of the given center to be the average elevation and moisture of its corners
+void assignFaceElevationsAndMoisture(Center* center) {
 	CornerListObj corners = center->corners;
-	float sum = 0.0;
+	float elevSum = 0.0;
+	float moistSum = 0.0;
 	
 	for ( CornerListObj::iterator corner_iter = corners.begin();
 		 corner_iter != corners.end(); ++corner_iter) {
-		sum += (*corner_iter).elevation;
+		elevSum  += (*corner_iter).elevation;
+		moistSum += (*corner_iter).moisture;
 	}
 	
-	center->elevation = sum/corners.size();
+	center->elevation = elevSum/corners.size();
+	center->moisture = moistSum/corners.size();
+}
+
+// Return a biome type based on the given center's moisture levels
+string fetchBiome(Center* center) {
+	if (center->ocean) {
+		return "OCEAN";
+	} else if (center->isWater) {
+		if (center->elevation < 0.1) return "MARSH";
+		if (center->elevation > 0.8) return "ICE";
+		return "LAKE";
+	} else if (center->isCoast) {
+		return "BEACH";
+	} else if (center->elevation > 0.8) {
+		if (center->moisture > 0.50) return "SNOW";
+		else if (center->moisture > 0.33) return "TUNDRA";
+		else if (center->moisture > 0.16) return "BARE";
+		else return "SCORCHED";
+	} else if (center->elevation > 0.6) {
+		if (center->moisture > 0.66) return "TAIGA";
+		else if (center->moisture > 0.33) return "SHRUBLAND";
+		else return "TEMPERATE_DESERT";
+	} else if (center->elevation > 0.3) {
+		if (center->moisture > 0.83) return "TEMPERATE_RAIN_FOREST";
+		else if (center->moisture > 0.50) return "TEMPERATE_DECIDUOUS_FOREST";
+		else if (center->moisture > 0.16) return "GRASSLAND";
+		else return "TEMPERATE_DESERT";
+	} else {
+		if (center->moisture > 0.66) return "TROPICAL_RAIN_FOREST";
+		else if (center->moisture > 0.33) return "TROPICAL_SEASONAL_FOREST";
+		else if (center->moisture > 0.16) return "GRASSLAND";
+		else return "SUBTROPICAL_DESERT";
+	}
 }
 
 // Determine elevation for each Voronoi polygon corner
@@ -290,6 +332,7 @@ void assignCornerElevations (void) {
 			// just add a large number here as a flag
 			//corner->elevation = 10.0;
 			
+			// !PLACEHOLDER FOR TESTING!
 			std::random_device rd;  //Will be used to obtain a seed for the random number engine
 			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 			std::uniform_real_distribution<> dist(0, 10);
@@ -299,6 +342,32 @@ void assignCornerElevations (void) {
 	}
 	
 }
+
+// Determine moisture for each Voronoi polygon corner
+void assignCornerMoisture (void) {
+	CornerList::iterator corner_iter = cornerList.begin();
+	
+	while (corner_iter != cornerList.end()) {
+		Corner* corner = *corner_iter++;
+		
+		
+		if (corner->ocean) {
+			corner->moisture = 1.0;
+			// push to queue
+		} else {
+			// init moisture
+			//corner->elevation = 0.0;
+			
+			// !PLACEHOLDER FOR TESTING!
+			std::random_device rd;  //Will be used to obtain a seed for the random number engine
+			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+			std::uniform_real_distribution<> dist(0, 10);
+			corner->moisture = dist(gen)/10;
+		}
+	}
+}
+
+
 
 // If a given center contains a corner with the 'border' attribute,
 // then return a modified center object set as a border and ocean
@@ -351,6 +420,7 @@ CornerList initCorners (Point site) {
 	return corners;
 }
 
+// Set every corner to contain a list of corners adjacent to it
 std::list<Corner> fetchAdjacentCorners(Point corner, std::map<Point, Corner*> map) {
 	;
 }
@@ -407,7 +477,8 @@ Center* initCenters (Point site, std::map <Point, CornerList> cornerMapV) {
 	}
 	
 	setOceanBorders(center);
-	assignFaceElevations (center);
+	assignFaceElevationsAndMoisture(center);
+	center->biome = fetchBiome(center);
 	
 	return center;
 }
@@ -472,7 +543,7 @@ void buildRelationshipLists () {
 	std::map <Point, Corner*> cornerMap  = boost::get<1>(cornerMaps);
 	
 	assignCornerElevations();
-	
+	assignCornerMoisture();
 	
 	std::map <Point, Center*> centerMap  = initCentersAndMap(cornerMapV);
 //	std::map <Point, Center*> centerMap  = initCentersAndMap();
@@ -484,7 +555,7 @@ void buildRelationshipLists () {
 		Center* center = *center_iter;
 		center -> neighbors = fetchNeighbors(center->point, centerMap);
 		
-		// if (debug) std::cout << *center << std::endl;
+		if (debug) std::cout << *center << std::endl;
 	}
 	
 }
@@ -599,9 +670,16 @@ void drawBiomes(void) {
 	while (ic != centerList.end ()) {
 		Center* c = *ic++;
 		
-		if (c->isWater and !c->isBorder) glColor3f (0.0, 0.23, 0.45);
-		if (c->isBorder) glColor3f (1.0, 0.23, 0.45);
-		if (!c->isBorder and !c->isWater) glColor3f (0.0, c->elevation, 0.0);
+		//if (c->isWater and !c->isBorder) glColor3f (0.0, 0.23, 0.45);
+		//if (c->isBorder) glColor3f (1.0, 0.23, 0.45);
+		if (c->isWater) glColor3f (0.0, 0.23, 0.45);
+		if (!c->isBorder and !c->isWater) { // land
+			if (displayElevations) glColor3f (0.0, c->elevation, 0.0);
+			else {
+				RGB color = biomeValues[c->biome];
+				glColor3f (color.rgb[0], color.rgb[1], color.rgb[2]);
+			}
+		}
 		
 		CornerListObj corners = c->corners;
 		
@@ -621,8 +699,8 @@ void drawBiomes(void) {
 // If displayDelaunay is set to true then each voronoi polygon
 // will be displayed along with its corresponding delaunay triangulation
 void drawMap(void) {
-	Delaunay toDrawTriang = ((displayRandom) ? triangRand : triang);
-	// Voronoi toDrawVoro = ((displayRandom) ? voronoiRand : voronoi);
+	Delaunay toDrawTriang = ((displayRandomVoronoi) ? triangRand : triang);
+	// Voronoi toDrawVoro = ((displayRandomVoronoi) ? voronoiRand : voronoi);
 	
 	if (displayBiome) drawBiomes();
 	if (displayVoronoi) drawVoronoiGivenDelaunay(toDrawTriang);
@@ -633,7 +711,7 @@ void drawMap(void) {
 
 // Draws the points in the generated point list
 void drawPoints (void) {
-	PointList toDrawPts = ((displayRandom) ? pointsRand : points);
+	PointList toDrawPts = ((displayRandomVoronoi) ? pointsRand : points);
 	
 	/// Draw points
 	if (displayBiome) glColor3f (0.0, 0.0, 0.0);
@@ -664,6 +742,69 @@ void reshape (int wid, int hgt)
 	glMatrixMode (GL_PROJECTION_MATRIX);
 	glLoadIdentity ();
 	gluOrtho2D (0, width, height, 0);
+}
+
+
+// Initialize the biome map to have an RGB value associated with each biome type
+void initBiomeValues () {
+	
+	RGB ocean = {0.0, 0.23, 0.45};
+	biomeValues.insert(std::pair<string, RGB> ("OCEAN", ocean));
+	
+	RGB beach = {0.75, 0.7, 0.6};
+	biomeValues.insert(std::pair<string, RGB> ("BEACH", beach));
+	
+	RGB marsh = {0.7, 0.86, 0.54};
+	biomeValues.insert(std::pair<string, RGB> ("MARSH", marsh));
+	
+	RGB ice = {0.58, 0.81, 0.85};
+	biomeValues.insert(std::pair<string, RGB> ("ICE", ice));
+	
+	RGB lake = {0.9, 0.9, 0.9};
+	biomeValues.insert(std::pair<string, RGB> ("LAKE", lake));
+	
+	RGB snow = {0.9, 0.9, 0.9};
+	biomeValues.insert(std::pair<string, RGB> ("SNOW", snow));
+	
+	RGB tundra = {0.86, 0.86, 0.73};
+	biomeValues.insert(std::pair<string, RGB> ("TUNDRA", tundra));
+	
+	RGB bare = {0.73, 0.73, 0.73};
+	biomeValues.insert(std::pair<string, RGB> ("BARE", bare));
+	
+	RGB scorched = {0.6, 0.6, 0.6};
+	biomeValues.insert(std::pair<string, RGB> ("SCORCHED", scorched));
+	
+	RGB taiga = {0.8, 0.83, 0.73};
+	biomeValues.insert(std::pair<string, RGB> ("TAIGA", taiga));
+	
+	RGB shrubland = {0.77, 0.77, 0.77};
+	biomeValues.insert(std::pair<string, RGB> ("SHRUBLAND", shrubland));
+	
+	RGB tempDesert = {0.89, 0.9, 0.79};
+	biomeValues.insert(std::pair<string, RGB> ("TEMPERATE_DESERT", tempDesert));
+	
+	RGB tempRF = {0.64, 0.76, 0.65};
+	biomeValues.insert(std::pair<string, RGB> ("TEMPERATE_RAIN_FOREST", tempRF));
+	
+	RGB tempDRF = {0.7, 0.78, 0.66};
+	biomeValues.insert(std::pair<string, RGB> ("TEMPERATE_DECIDUOUS_FOREST", tempDRF));
+	
+	RGB grassland = {0.76, 0.83, 0.66};
+	biomeValues.insert(std::pair<string, RGB> ("GRASSLAND", grassland));
+	
+	RGB tempD = {0.89, 0.9, 0.79};
+	biomeValues.insert(std::pair<string, RGB> ("TEMPERATE_DESERT", tempD));
+
+	RGB tropRain = {0.61, 0.73, 0.66};
+	biomeValues.insert(std::pair<string, RGB> ("TROPICAL_RAINFOREST", tropRain));
+	
+	RGB tropSF = {0.66, 0.8, 0.64};
+	biomeValues.insert(std::pair<string, RGB> ("TROPICAL_SEASONAL_FOREST", tropSF));
+	
+	RGB subDesert = {0.91, 0.86, 0.78};
+	biomeValues.insert(std::pair<string, RGB> ("SUBTROPICAL_DESERT", subDesert));
+
 }
 
 // Performed once at startup and whenever 'r' is pressed
@@ -707,35 +848,62 @@ void mouse (int button, int state, int x, int y)
 void keyboard (unsigned char key, int x, int y) {
 	std::string help;
 	switch (key) {
+		
 			// display Voronoi diagram using only randomized points
 		case '1':
-			displayRandom = true;
+			displayRandomVoronoi = true;
 			displayBiome = false;
 			displayRadial = false;
+			displayElevations = false;
+
 			break;
 			
-			// display Voronoi diagram with applied lloyd relaxation
+		// display Voronoi diagram with applied lloyd relaxation
 		case '2':
-			displayRandom = false;
+			displayRandomVoronoi = false;
 			displayBiome = false;
 			displayRadial = false;
+			displayElevations = false;
+
 			break;
-			
-			// display radial
+		
+		
+		// display random map
+//		case '3':
+//			displayRandomVoronoi = false;
+//			displayBiome = true;
+//			displayRadial = false;
+//			
+//			resetPointerLists();
+//			buildRelationshipLists();
+//			break;
+//			
+		// display radial
 		case '3':
-			displayRandom = false;
+			displayRandomVoronoi = false;
 			displayBiome = true;
 			displayRadial = true;
-			buildRelationshipLists();
+			displayElevations = false;
+			
 			break;
 			
-			// generate new diagrams
+		// display elevations
+		case 'e':
+			displayRandomVoronoi = false;
+			displayBiome = true;
+			displayRadial = true;
+			displayElevations = !displayElevations;
+			
+			break;
+			
+		// generate new diagrams
 		case 'r':
 			// Be sure to delete previous pointers in list as new ones will be generated
 			resetPointerLists();
 			generateNewGraphs();
 			break;
 			
+		// display help
 		case 'h':
 			help = "\n 1 - Voronoi diagram with random points \n "
 			"2 - Voronoi diagram with applied LLoyd relaxation \n "
@@ -793,6 +961,7 @@ int main(int argc, char** argv)
 	glutInitWindowSize (width, height);
 	glutInitWindowPosition (100, 400);
 	glutCreateWindow ("Map Generator");
+	initBiomeValues();
 	generateNewGraphs();
 	glutDisplayFunc(display);
 	glutMouseFunc (mouse);

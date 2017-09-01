@@ -23,6 +23,7 @@ class Corner {
 		bool isBorder;
 	
 		float elevation; // between 0.0 and 1.0
+		float moisture;
 	
 		// the list of corners adjacent to this corner
 		std::list<Corner> adjacent;

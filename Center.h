@@ -6,6 +6,7 @@
 typedef CGAL::Cartesian<double> K;  ///< Kernel
 typedef CGAL::Point_2<K>  Point;  ///< Point in 2D
 typedef std::list<Corner> CornerListObj;
+typedef std::basic_string<char> string;
 
 // The Center object is responsible to keep track of the relationships between Voronoi faces
 class Center {
@@ -16,6 +17,10 @@ class Center {
 		Point point;
 		// elevation of this center object
 		float elevation;
+		// moisture for this center object - will be used to determine biomes
+		float moisture;
+		// biome type - see: http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
+		string biome;
 	
 		// is this tile water?
 		bool isWater; 
@@ -24,7 +29,8 @@ class Center {
 		bool ocean;    
 		// depictor for the border of the map
 		bool isBorder;
-
+		// whether this center tile is on the coast of the island - TO BE DEALT WITH
+		bool isCoast;
 	
 		// List of the corners of this voronoi face
 		std::list<Corner> corners;
@@ -38,7 +44,8 @@ class Center {
 	// (A friend function of a class is defined outside that class' scope but it has the right to access all private and protected members of the class. Even though the prototypes for friend functions appear in the class definition, friends are not member functions.)
 	// Print the data from center
 	friend std::ostream& operator <<(std::ostream& out, const Center& center ) {
-		out << "\n Site " << center.index;
+		out << "\n Site "		<< center.index;
+		out << "\n Biome: "		<< center.biome;
 		out << "\n location: ("	<< center.point[0]  << " , " << center.point[1] << ")";
 		out << "\n isWater: "	<< center.isWater;
 		out << "\n ocean: "		<< center.ocean;
