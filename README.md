@@ -25,7 +25,7 @@ This project uses CGAL and OpenGL.
 * '1' - Initial Voronoi diagram
 * '2' - Voronoi diagram with applied Lloyd Relaxation
 * '3' - Radially generated map
-* 'e' - display map elevations'
+* 'e' - display map elevations' - lighter colors are higher elevations
 * 'r' - randomize - generate a new map
 * 'MOUSE LEFT BUTTON' - display Delaunay triangulation
 * 'MOUSE RIGHT BUTTON' - display Voronoi diagram

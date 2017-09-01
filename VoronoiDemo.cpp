@@ -674,7 +674,7 @@ void drawBiomes(void) {
 		//if (c->isBorder) glColor3f (1.0, 0.23, 0.45);
 		if (c->isWater) glColor3f (0.0, 0.23, 0.45);
 		if (!c->isBorder and !c->isWater) { // land
-			if (displayElevations) glColor3f (0.0, c->elevation, 0.0);
+			if (displayElevations) glColor3f (c->elevation, 1.0, c->elevation - 63);
 			else {
 				RGB color = biomeValues[c->biome];
 				glColor3f (color.rgb[0], color.rgb[1], color.rgb[2]);
@@ -909,7 +909,7 @@ void keyboard (unsigned char key, int x, int y) {
 			"2 - Voronoi diagram with applied LLoyd relaxation \n "
 			"3 - Randomely generated map \n "
 			"4 - Radial map generarion \n "
-			"e - display map elevations \n"
+			"e - display map elevations - lighter the color, higher the elevation\n"
 			"r - generate a new diagram \n "
 			"Middle Mouse Button - display Delaunay triangulation \n "
 			"Left Mouse Button - display Voronoi diagram \n";
