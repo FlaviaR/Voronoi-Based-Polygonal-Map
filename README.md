@@ -33,12 +33,12 @@ This project uses CGAL and OpenGL.
 
 ## TO DO:
 * Finish developing graph structure - figure out how to get incident vertices for the voronoi corners
-* Generate a uniform elevation standard, where the center of the map has higher elevations than the borders
-* Make the colors be less ugly
+* Generate a uniform elevation/moisture standard, where the center of the map has higher elevations/moisture than the borders
+* BUG: uniform moisture should also fix black colored biomes - unrepresented color for that given biome
+* Make the colors less ugly
 * Display lakes
 * Display rivers
 * Add elevations
-* Add biomes
 * Add town names
 * Add other map generation algs 
 
